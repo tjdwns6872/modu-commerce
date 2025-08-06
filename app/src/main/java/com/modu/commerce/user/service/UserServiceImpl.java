@@ -30,6 +30,7 @@ public class UserServiceImpl implements UserService{
         log.info("UserSignupRequest DATA ==> {}", request.toString());
         boolean existsEmail = userRepository.existsByEmail(request.getEmail());
         if(existsEmail){
+            log.error("SIGNUP EMAIL DUPLICATION ERROR");
             throw new EmailAlreadyExistsException();
         }
         ModuUser entity = request.toEntity(passwordEncoder.encode(request.getPassword())
@@ -37,6 +38,7 @@ public class UserServiceImpl implements UserService{
                                         , StatusEnum.ACTIVE);
 
         entity = userRepository.save(entity);
+        log.info("SIGNUP SUCCESS");
         return entity.getEmail();
     }
     
