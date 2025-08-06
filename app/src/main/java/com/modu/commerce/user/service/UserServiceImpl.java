@@ -1,13 +1,18 @@
 package com.modu.commerce.user.service;
 
+import java.util.Optional;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.modu.commerce.user.RoleEnum;
 import com.modu.commerce.user.StatusEnum;
+import com.modu.commerce.user.dto.UserLoginRequest;
+import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
 import com.modu.commerce.user.entity.ModuUser;
 import com.modu.commerce.user.exception.EmailAlreadyExistsException;
+import com.modu.commerce.user.exception.InvalidCredentialsException;
 import com.modu.commerce.user.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +45,27 @@ public class UserServiceImpl implements UserService{
         entity = userRepository.save(entity);
         log.info("SIGNUP SUCCESS");
         return entity.getEmail();
+    }
+
+    @Override
+    public UserLoginResponse login(UserLoginRequest request) {
+        log.info("UserLoginRequest DATA ==> {}", request.toString());
+        Optional<ModuUser> optionalUser = userRepository.findByEmail(request.getEmail());
+
+        ModuUser entity = optionalUser.orElseThrow(InvalidCredentialsException::new);
+
+        UserLoginResponse response = new UserLoginResponse();
+        if(passwordEncoder.matches(request.getPassword(), entity.getPassword())){
+            response = UserLoginResponse.builder()
+                                            .id(entity.getId())
+                                            .email(entity.getEmail())
+                                            .build();
+        }else{
+            log.error("LOGIN INVALID CREDENTIALS ERROR");
+            throw new InvalidCredentialsException();
+        }
+        log.info("LOGIN SUCCESS");
+        return response;
     }
     
 }

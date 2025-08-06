@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.modu.commerce.common.api.response.CommonResponseVO;
+import com.modu.commerce.user.dto.UserLoginRequest;
+import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
 import com.modu.commerce.user.service.UserService;
 
@@ -32,6 +34,20 @@ public class UserController {
             .code(HttpStatus.CREATED.value())
             .message("회원가입 되었습니다.")
             .data(email)
+            .build();
+
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<CommonResponseVO<UserLoginResponse>> login(@RequestBody @Valid UserLoginRequest request){
+
+        UserLoginResponse result = userService.login(request);
+
+        CommonResponseVO<UserLoginResponse> response = CommonResponseVO.<UserLoginResponse>builder()
+            .code(HttpStatus.OK.value())
+            .message("로그인 되었습니다.")
+            .data(result)
             .build();
 
         return ResponseEntity.status(response.getCode()).body(response);

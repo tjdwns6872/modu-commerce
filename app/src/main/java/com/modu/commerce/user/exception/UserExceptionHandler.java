@@ -19,4 +19,14 @@ public class UserExceptionHandler {
         
         return ResponseEntity.badRequest().body(response);
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<CommonResponseVO<Void>> invalidCredentialsException(InvalidCredentialsException ex){
+        CommonResponseVO<Void> response = CommonResponseVO.<Void>builder()
+            .code(HttpStatus.UNAUTHORIZED.value())
+            .message(ex.getMessage())
+            .build();
+        
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
 }

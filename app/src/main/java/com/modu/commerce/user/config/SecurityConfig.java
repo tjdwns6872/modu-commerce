@@ -22,7 +22,8 @@ public class SecurityConfig {
                     "/swagger-ui/**"
                     , "/v3/api-docs/**"
                     , "/swagger-resources/**"
-                    , "/api/v1/users/signup").permitAll() // 인증없이 접근 가능한 url패턴
+                    , "/api/v1/users/signup"
+                    , "/api/v1/users/login").permitAll() // 인증없이 접근 가능한 url패턴
                 .anyRequest().authenticated());
 
         return http.build();
