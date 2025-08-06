@@ -53,8 +53,10 @@ public class UserServiceImpl implements UserService{
         Optional<ModuUser> optionalUser = userRepository.findByEmail(request.getEmail());
 
         ModuUser entity = optionalUser.orElseThrow(InvalidCredentialsException::new);
-
+        log.info("Entity DATA ==> {}", entity.toString());
         UserLoginResponse response = new UserLoginResponse();
+        log.info("PASSWORD MATCHES START");
+        log.info("PASSWORD MATCHES RESULT===>{}", passwordEncoder.matches(request.getPassword(), entity.getPassword()));
         if(passwordEncoder.matches(request.getPassword(), entity.getPassword())){
             response = UserLoginResponse.builder()
                                             .id(entity.getId())
@@ -64,6 +66,7 @@ public class UserServiceImpl implements UserService{
             log.error("LOGIN INVALID CREDENTIALS ERROR");
             throw new InvalidCredentialsException();
         }
+        log.info("PASSWORD MATCHES END");
         log.info("LOGIN SUCCESS");
         return response;
     }

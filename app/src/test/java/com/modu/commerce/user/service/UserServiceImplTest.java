@@ -3,6 +3,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -12,9 +14,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.modu.commerce.user.RoleEnum;
 import com.modu.commerce.user.StatusEnum;
+import com.modu.commerce.user.dto.UserLoginRequest;
+import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
 import com.modu.commerce.user.entity.ModuUser;
 import com.modu.commerce.user.exception.EmailAlreadyExistsException;
+import com.modu.commerce.user.exception.InvalidCredentialsException;
 import com.modu.commerce.user.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -66,5 +71,45 @@ public class UserServiceImplTest {
         verify(userRepository, times(1)).existsByEmail("duplicate@example.com");
         verify(userRepository, never()).save(any());
     }
+
+    @Test
+    void testLoginSuccess() {
+        UserLoginRequest request = new UserLoginRequest();
+        request.setEmail("12@naver.com"); 
+        request.setPassword("test1123123234"); 
+
+        ModuUser userEntity = ModuUser.builder()
+            .id(1L)
+            .email("1234@naver.com")
+            .password("$2a$10$NXtsa0jQ9exSw4sYlohvfOpZMeDmSlSKl/Jk7PepZsMH7qwpSkR9u")
+            .build();
+
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(userEntity));
+        when(passwordEncoder.matches(request.getPassword(), userEntity.getPassword())).thenReturn(true);
+
+        UserLoginResponse response = userService.login(request);
+
+        assertEquals(userEntity.getId(), response.getId());
+        assertEquals(userEntity.getEmail(), response.getEmail());
+    }
+
+    @Test
+    void testLoginFail() {
+        UserLoginRequest request = new UserLoginRequest();
+        request.setEmail("1234@naver.com");
+        request.setPassword("test1234");
+
+        ModuUser userEntity = ModuUser.builder()
+            .id(1L)
+            .email("1234@naver.com")
+            .password("$2a$10$NXtsa0jQ9exSw4sYlohvfOpZMeDmSlSKl/Jk7PepZsMH7qwpSkR9u")
+            .build();
+
+        when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(userEntity));
+        when(passwordEncoder.matches(request.getPassword(), userEntity.getPassword())).thenReturn(false);
+
+        assertThrows(InvalidCredentialsException.class, () -> userService.login(request));
+    }
+    
 }
 
