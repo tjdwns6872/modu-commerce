@@ -5,6 +5,7 @@ import java.util.Optional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.modu.commerce.security.JwtTokenProvider;
 import com.modu.commerce.user.RoleEnum;
 import com.modu.commerce.user.StatusEnum;
 import com.modu.commerce.user.dto.UserLoginRequest;
@@ -23,11 +24,14 @@ public class UserServiceImpl implements UserService{
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public UserServiceImpl(UserRepository userRepository
-                        ,PasswordEncoder passwordEncoder){
+                        ,PasswordEncoder passwordEncoder
+                        ,JwtTokenProvider jwtTokenProvider){
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Override
@@ -61,6 +65,7 @@ public class UserServiceImpl implements UserService{
             response = UserLoginResponse.builder()
                                             .id(entity.getId())
                                             .email(entity.getEmail())
+                                            .token(jwtTokenProvider.generateToken(entity.getId()))
                                             .build();
         }else{
             log.error("LOGIN INVALID CREDENTIALS ERROR");
