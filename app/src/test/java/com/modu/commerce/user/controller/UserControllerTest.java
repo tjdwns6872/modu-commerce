@@ -9,19 +9,22 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.Import;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.modu.commerce.user.config.SecurityConfig;
+import com.modu.commerce.user.dto.UserLoginRequest;
+import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
 import com.modu.commerce.user.service.UserService;
 
-@WebMvcTest(UserController.class) //테스트 대상 컨트롤러 지정
-@Import(SecurityConfig.class)
+// @WebMvcTest(UserController.class) //테스트 대상 컨트롤러 지정
+// @Import(SecurityConfig.class)
+@SpringBootTest
+@AutoConfigureMockMvc
 public class UserControllerTest {
 
     @Autowired
@@ -53,5 +56,29 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.code").value(201))   // JSON 데이터 내 code 필드 검증
                 .andExpect(jsonPath("$.message").value("회원가입 되었습니다."))  // 메시지 검증
                 .andExpect(jsonPath("$.data").value("test@example.com"));  // 반환된 이메일 검증
+    }
+
+    @Test
+    void testLogin() throws Exception {
+        UserLoginRequest request = new UserLoginRequest();
+        request.setEmail("1234@naver.com");
+        request.setPassword("test1234");
+
+        UserLoginResponse response = UserLoginResponse.builder()
+                .id(1L)
+                .email("1234@naver.com")
+                .build();
+
+        // 서비스가 실제 반환하는 래핑된 응답이 있다면 그 형태로 목 생성 필요
+        when(userService.login(any(UserLoginRequest.class))).thenReturn(response);
+
+        mockMvc.perform(post("/api/v1/users/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request))
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.code").value(200))
+            .andExpect(jsonPath("$.data.id").value(1))  // JSON 숫자 타입은 Long으로 표시해도 되지만 .value(1)로도 성공
+            .andExpect(jsonPath("$.data.email").value("1234@naver.com"));
     }
 }
