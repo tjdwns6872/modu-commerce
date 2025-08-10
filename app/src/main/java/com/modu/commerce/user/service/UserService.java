@@ -1,5 +1,6 @@
 package com.modu.commerce.user.service;
 
+import com.modu.commerce.user.dto.UserDetailResponse;
 import com.modu.commerce.user.dto.UserLoginRequest;
 import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
@@ -18,4 +19,11 @@ public interface UserService {
      * @param userLoginRequest
      */
     public UserLoginResponse login(UserLoginRequest userLoginRequest);
+
+    /**
+     * 회원정보 
+     * @param userId
+     * @return UserDetailResponse(회원정보)
+     */
+    public UserDetailResponse userInfo(Long userId); 
 }

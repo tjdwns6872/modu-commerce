@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import com.modu.commerce.security.JwtTokenProvider;
 import com.modu.commerce.user.RoleEnum;
 import com.modu.commerce.user.StatusEnum;
+import com.modu.commerce.user.dto.UserDetailResponse;
 import com.modu.commerce.user.dto.UserLoginRequest;
 import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
@@ -74,6 +75,15 @@ public class UserServiceImpl implements UserService{
         log.info("PASSWORD MATCHES END");
         log.info("LOGIN SUCCESS");
         return response;
+    }
+
+    @Override
+    public UserDetailResponse userInfo(Long userId) {
+        Optional<ModuUser> result = userRepository.findById(userId);
+        UserDetailResponse response = result.map(UserDetailResponse::fromEntity)
+            .orElseThrow(() -> new RuntimeException());
+        return response;
+
     }
     
 }

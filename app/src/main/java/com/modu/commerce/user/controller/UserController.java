@@ -2,12 +2,16 @@ package com.modu.commerce.user.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.modu.commerce.common.api.response.CommonResponseVO;
+import com.modu.commerce.security.CustomUserDetails;
+import com.modu.commerce.user.dto.UserDetailResponse;
 import com.modu.commerce.user.dto.UserLoginRequest;
 import com.modu.commerce.user.dto.UserLoginResponse;
 import com.modu.commerce.user.dto.UserSignupRequest;
@@ -47,6 +51,19 @@ public class UserController {
         CommonResponseVO<UserLoginResponse> response = CommonResponseVO.<UserLoginResponse>builder()
             .code(HttpStatus.OK.value())
             .message("로그인 되었습니다.")
+            .data(result)
+            .build();
+
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @GetMapping("/detail")
+    public ResponseEntity<CommonResponseVO<UserDetailResponse>> userInfo(@AuthenticationPrincipal CustomUserDetails details){
+        UserDetailResponse result = userService.userInfo(details.getId());
+
+        CommonResponseVO<UserDetailResponse> response = CommonResponseVO.<UserDetailResponse>builder()
+            .code(HttpStatus.OK.value())
+            .message("회원정보를 성공적으로 가져왔습니다.")
             .data(result)
             .build();
 
