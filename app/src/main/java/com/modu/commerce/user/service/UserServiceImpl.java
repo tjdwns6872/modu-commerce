@@ -16,6 +16,7 @@ import com.modu.commerce.user.entity.ModuUser;
 import com.modu.commerce.user.exception.EmailAlreadyExistsException;
 import com.modu.commerce.user.exception.InvalidCredentialsException;
 import com.modu.commerce.user.exception.StatusException;
+import com.modu.commerce.user.exception.UserNotFoundException;
 import com.modu.commerce.user.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -82,11 +83,18 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserDetailResponse userInfo(Long userId) {
-        Optional<ModuUser> result = userRepository.findById(userId);
-        UserDetailResponse response = result.map(UserDetailResponse::fromEntity)
-            .orElseThrow(() -> new RuntimeException());
-        return response;
+        log.info("LOOKING FOR USER ID: {}", userId);
 
+        ModuUser entity = userRepository.findById(userId)
+                            .orElseThrow(UserNotFoundException::new);
+
+        StatusException statusException = entity.getStatus().getException();
+        if(statusException != null) throw statusException;
+
+        UserDetailResponse response = UserDetailResponse.fromEntity(entity);
+        log.info("USER INFO RETRIEVAL SUCCESS FOR ID: {}", userId);
+
+        return response;
     }
     
 }

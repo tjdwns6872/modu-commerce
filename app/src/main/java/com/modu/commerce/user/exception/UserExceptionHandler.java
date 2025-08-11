@@ -1,5 +1,6 @@
 package com.modu.commerce.user.exception;
 
+import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -35,6 +36,16 @@ public class UserExceptionHandler {
     public ResponseEntity<CommonResponseVO<Void>> statusException(StatusException ex){
         CommonResponseVO<Void> response = CommonResponseVO.<Void>builder()
             .code(ex.getCode())
+            .message(ex.getMessage())
+            .build();
+        
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<CommonResponseVO<Void>> notFoundException(NotFoundException ex){
+        CommonResponseVO<Void> response = CommonResponseVO.<Void>builder()
+            .code(HttpStatus.NOT_FOUND.value())
             .message(ex.getMessage())
             .build();
         
