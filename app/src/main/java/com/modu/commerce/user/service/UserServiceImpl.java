@@ -15,6 +15,7 @@ import com.modu.commerce.user.dto.UserSignupRequest;
 import com.modu.commerce.user.entity.ModuUser;
 import com.modu.commerce.user.exception.EmailAlreadyExistsException;
 import com.modu.commerce.user.exception.InvalidCredentialsException;
+import com.modu.commerce.user.exception.StatusException;
 import com.modu.commerce.user.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
@@ -54,26 +55,28 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public UserLoginResponse login(UserLoginRequest request) {
-        log.info("UserLoginRequest DATA ==> {}", request.toString());
-        Optional<ModuUser> optionalUser = userRepository.findByEmail(request.getEmail());
 
-        ModuUser entity = optionalUser.orElseThrow(InvalidCredentialsException::new);
-        log.info("Entity DATA ==> {}", entity.toString());
-        UserLoginResponse response = new UserLoginResponse();
-        log.info("PASSWORD MATCHES START");
-        log.info("PASSWORD MATCHES RESULT===>{}", passwordEncoder.matches(request.getPassword(), entity.getPassword()));
-        if(passwordEncoder.matches(request.getPassword(), entity.getPassword())){
-            response = UserLoginResponse.builder()
-                                            .id(entity.getId())
-                                            .email(entity.getEmail())
-                                            .token(jwtTokenProvider.generateToken(entity.getId()))
-                                            .build();
-        }else{
+        ModuUser entity = userRepository.findByEmail(request.getEmail())
+                            .orElseThrow(InvalidCredentialsException::new);
+
+        StatusException statusException = entity.getStatus().getException();
+        if(statusException != null) throw statusException;
+
+        if(!passwordEncoder.matches(request.getPassword(), entity.getPassword())){
             log.error("LOGIN INVALID CREDENTIALS ERROR");
             throw new InvalidCredentialsException();
         }
-        log.info("PASSWORD MATCHES END");
+
+        String token = jwtTokenProvider.generateToken(entity.getId());
+        log.info("LOGIN SUCCESS - email: {}", entity.getEmail());
+
         log.info("LOGIN SUCCESS");
+        UserLoginResponse response = UserLoginResponse.builder()
+                    .id(entity.getId())
+                    .email(entity.getEmail())
+                    .token(token)
+                    .build();
+
         return response;
     }
 

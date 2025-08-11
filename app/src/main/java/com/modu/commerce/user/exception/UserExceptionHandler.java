@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.modu.commerce.common.api.response.CommonResponseVO;
+import com.modu.commerce.common.exception.UnauthorizedException;
 
 @RestControllerAdvice
 public class UserExceptionHandler {
@@ -20,10 +21,20 @@ public class UserExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<CommonResponseVO<Void>> invalidCredentialsException(InvalidCredentialsException ex){
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<CommonResponseVO<Void>> unauthorizedException(UnauthorizedException ex){
         CommonResponseVO<Void> response = CommonResponseVO.<Void>builder()
             .code(HttpStatus.UNAUTHORIZED.value())
+            .message(ex.getMessage())
+            .build();
+        
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @ExceptionHandler(StatusException.class)
+    public ResponseEntity<CommonResponseVO<Void>> statusException(StatusException ex){
+        CommonResponseVO<Void> response = CommonResponseVO.<Void>builder()
+            .code(ex.getCode())
             .message(ex.getMessage())
             .build();
         
