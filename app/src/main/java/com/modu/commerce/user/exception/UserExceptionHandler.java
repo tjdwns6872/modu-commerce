@@ -1,5 +1,7 @@
 package com.modu.commerce.user.exception;
 
+import org.springframework.core.annotation.Order;
+import org.springframework.core.Ordered;
 import org.springframework.data.crossstore.ChangeSetPersister.NotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -9,7 +11,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import com.modu.commerce.common.api.response.CommonResponseVO;
 import com.modu.commerce.common.exception.UnauthorizedException;
 
-@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@RestControllerAdvice(basePackages = "com.modu.commerce.user")
 public class UserExceptionHandler {
     
     @ExceptionHandler(EmailAlreadyExistsException.class)
