@@ -49,9 +49,7 @@ public class SecurityConfig {
                     "/api/v1/users/login",
                     "/actuator/health"
                 ).permitAll()
-                // NOTE: 권한 부여 형태에 따라 아래 둘 중 하나 선택
-                .requestMatchers(HttpMethod.POST, "/api/products").hasRole("ADMIN") // ROLE_ADMIN 필요
-                //.requestMatchers(HttpMethod.POST, "/api/products").hasAuthority("ADMIN")
+                .requestMatchers( "/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
 
