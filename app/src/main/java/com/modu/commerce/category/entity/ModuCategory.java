@@ -12,7 +12,11 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.FetchType;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,7 +27,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Entity
-@Table(name = "MODU_CATEGORY")
+@Table(name = "MODU_CATEGORY", uniqueConstraints = @UniqueConstraint(name = "uk_category_parent_name", columnNames = {"parent_id", "NAME"}))
 @Builder
 @Data
 public class ModuCategory {
@@ -33,14 +37,18 @@ public class ModuCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "PARENT_ID")
-    private Long parentId;
+    // @Column(name = "PARENT_ID")
+    // private Long parentId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private ModuCategory parent;
+
 
     @Column(name = "NAME", length = 100, nullable = false)
     private String name;
 
-    @Column(name = "DEPTH")
-    private Long depth;
+    @Column(name = "DEPTH", nullable = false)
+    private int depth;
 
     @CreatedDate
     @Column(name = "CREATED_AT", updatable = false)

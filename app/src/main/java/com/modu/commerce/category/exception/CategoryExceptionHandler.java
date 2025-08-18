@@ -47,8 +47,17 @@ public class CategoryExceptionHandler {
         return ResponseEntity.badRequest().body(body);
     }
 
-    @ExceptionHandler(jakarta.validation.ValidationException.class)
-    public ResponseEntity<CommonResponseVO<Void>> handleValidation(jakarta.validation.ValidationException ex) {
+    @ExceptionHandler(InvalidCategoryNameException.class)
+    public ResponseEntity<CommonResponseVO<Void>> invalidCategoryNameException(InvalidCategoryNameException ex) {
+        CommonResponseVO<Void> body = CommonResponseVO.<Void>builder()
+            .code(HttpStatus.BAD_REQUEST.value())
+            .message(ex.getMessage())
+            .build();
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(InvalidParentCategoryException.class)
+    public ResponseEntity<CommonResponseVO<Void>> invalidParentCategoryException(InvalidParentCategoryException ex) {
         CommonResponseVO<Void> body = CommonResponseVO.<Void>builder()
             .code(HttpStatus.BAD_REQUEST.value())
             .message(ex.getMessage())
