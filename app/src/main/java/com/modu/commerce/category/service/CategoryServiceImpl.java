@@ -1,18 +1,25 @@
 package com.modu.commerce.category.service;
 
+import java.util.List;
+
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.entity.ModuCategory;
+import com.modu.commerce.category.entity.QModuCategory;
 import com.modu.commerce.category.exception.CategoryNotFoundException;
 import com.modu.commerce.category.exception.DuplicateCategoryNameUnderSameParent;
 import com.modu.commerce.category.exception.InvalidCategoryNameException;
 import com.modu.commerce.category.exception.InvalidParentCategoryException;
 import com.modu.commerce.category.exception.ParentCategoryNotFound;
 import com.modu.commerce.category.repository.CategoryRepository;
+import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.impl.JPAQueryFactory;
+
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -20,9 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 public class CategoryServiceImpl implements CategoryService{
 
     private final CategoryRepository categoryRepository;
+    private final JPAQueryFactory queryFactory;
 
-    public CategoryServiceImpl(CategoryRepository categoryRepository){
+    public CategoryServiceImpl(CategoryRepository categoryRepository, JPAQueryFactory queryFactory){
         this.categoryRepository = categoryRepository;
+        this.queryFactory = queryFactory;
     }
 
     @Transactional
@@ -93,5 +102,19 @@ public class CategoryServiceImpl implements CategoryService{
                 .updatedAt(category.getUpdatedAt())
                 .hasChildren(categoryRepository.existsByParent_Id(id))
                 .build();
+    }
+
+    @Override
+    public void categoryList(CategoryListRequest request) {
+        log.info("\n{}", request.toString());
+        QModuCategory mc = new QModuCategory("mc");
+        List<CategoryOneResponse> response = queryFactory.select(
+            Projections.constructor(CategoryOneResponse.class
+                                    , mc.id, mc.parent, mc.depth, mc.name, mc.createdAt, mc.updatedAt)
+            ).from(mc)
+            .where(mc.id.eq(request.getParentId()))
+            .orderBy(mc.name.asc())
+            .fetch();
+        log.info("\n{}", response.toArray());
     }
 }

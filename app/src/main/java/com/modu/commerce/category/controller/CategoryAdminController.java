@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.service.CategoryService;
@@ -57,5 +58,11 @@ public class CategoryAdminController {
             .build();
 
         return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @GetMapping("/categories")
+    public ResponseEntity<CommonResponseVO<Void>> getList(CategoryListRequest request){
+        categoryService.categoryList(request);
+        return null;
     }
 }
