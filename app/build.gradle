@@ -40,8 +40,24 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6' // JSON 직렬화/역직렬화
+
+	implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+	annotationProcessor "com.querydsl:querydsl-apt:5.0.0:jakarta"
+	annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+	annotationProcessor "jakarta.persistence:jakarta.persistence-api"
 }
 
 tasks.named('test') {
 	useJUnitPlatform()
+}
+
+def querydslDir = "$buildDir/generated/querydsl"
+
+tasks.withType(JavaCompile).configureEach {
+    options.generatedSourceOutputDirectory.set(file(querydslDir))
+}
+
+sourceSets.main.java.srcDirs += [querydslDir]
+clean {
+    delete file(querydslDir)
 }
