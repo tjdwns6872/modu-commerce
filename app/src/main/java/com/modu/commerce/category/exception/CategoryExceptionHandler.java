@@ -64,4 +64,12 @@ public class CategoryExceptionHandler {
             .build();
         return ResponseEntity.badRequest().body(body);
     }
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<CommonResponseVO<Void>> categoryNotFoundException(CategoryNotFoundException ex) {
+        CommonResponseVO<Void> body = CommonResponseVO.<Void>builder()
+            .code(HttpStatus.NOT_FOUND.value())
+            .message(ex.getMessage())
+            .build();
+        return ResponseEntity.status(body.getCode()).body(body);
+    }
 }
