@@ -2,10 +2,15 @@ package com.modu.commerce.category.dto;
 
 import java.time.LocalDateTime;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter @Builder
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class CategoryOneResponse {
     
     private Long id;
@@ -14,5 +19,5 @@ public class CategoryOneResponse {
     private int depth;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    private boolean hasChildren;
+    private Boolean hasChildren;
 }

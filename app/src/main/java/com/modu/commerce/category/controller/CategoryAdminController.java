@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.modu.commerce.category.dto.CategoryListRequest;
+import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.service.CategoryService;
@@ -61,8 +63,14 @@ public class CategoryAdminController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<CommonResponseVO<Void>> getList(CategoryListRequest request){
-        categoryService.categoryList(request);
-        return null;
+    public ResponseEntity<CommonResponseVO<CategoryListResponse>> getList(@ModelAttribute @Valid CategoryListRequest request){
+        CategoryListResponse data = categoryService.categoryList(request);
+
+        CommonResponseVO<CategoryListResponse> response = CommonResponseVO.<CategoryListResponse>builder()
+            .code(HttpStatus.OK.value())
+            .message("카테고리 목록 조회")
+            .data(data)
+            .build();
+        return ResponseEntity.status(response.getCode()).body(response);
     }
 }

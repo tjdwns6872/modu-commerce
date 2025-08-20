@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.modu.commerce.category.dto.CategoryListRequest;
+import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.entity.ModuCategory;
@@ -16,8 +17,12 @@ import com.modu.commerce.category.exception.DuplicateCategoryNameUnderSameParent
 import com.modu.commerce.category.exception.InvalidCategoryNameException;
 import com.modu.commerce.category.exception.InvalidParentCategoryException;
 import com.modu.commerce.category.exception.ParentCategoryNotFound;
+import com.modu.commerce.category.repository.CategoryPredicate;
 import com.modu.commerce.category.repository.CategoryRepository;
+import com.querydsl.core.types.ExpressionUtils;
+import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
 import lombok.extern.slf4j.Slf4j;
@@ -105,16 +110,52 @@ public class CategoryServiceImpl implements CategoryService{
     }
 
     @Override
-    public void categoryList(CategoryListRequest request) {
+    @Transactional(readOnly = true)
+    public CategoryListResponse categoryList(CategoryListRequest request) {
         log.info("\n{}", request.toString());
         QModuCategory mc = new QModuCategory("mc");
+        QModuCategory child = new QModuCategory("child");
+
+        Predicate condition = ExpressionUtils.allOf(
+            CategoryPredicate.nameContains(mc, request.getKeyword()),
+            CategoryPredicate.parentIdEq(mc, request.getParentId())
+        );
+
         List<CategoryOneResponse> response = queryFactory.select(
-            Projections.constructor(CategoryOneResponse.class
-                                    , mc.id, mc.parent, mc.depth, mc.name, mc.createdAt, mc.updatedAt)
-            ).from(mc)
-            .where(mc.id.eq(request.getParentId()))
-            .orderBy(mc.name.asc())
-            .fetch();
-        log.info("\n{}", response.toArray());
+                                                    Projections.fields(
+                                                        CategoryOneResponse.class,
+                                                        mc.id.as("id"),
+                                                        mc.parent.id.as("parentId"),
+                                                        mc.name.as("name"),
+                                                        mc.depth.as("depth"),
+                                                        mc.createdAt.as("createdAt"),
+                                                        mc.updatedAt.as("updatedAt"),
+                                                        ExpressionUtils.as(
+                                                            JPAExpressions
+                                                                .selectOne()
+                                                                .from(child)
+                                                                .where(child.parent.id.eq(mc.id))
+                                                                .exists(),
+                                                            "hasChildren"   
+                                                        )
+                                                    ))
+                                            .from(mc)
+                                            .where(condition)
+                                            .orderBy(mc.depth.asc(), mc.name.asc())
+                                            .offset((long)request.getPage() * (long)request.getSize())
+                                            .limit(request.getSize())
+                                            .fetch();
+
+        for (CategoryOneResponse dto : response) {
+            log.info("category: {}", dto);
+        }
+
+        return CategoryListResponse.builder()
+                                .list(response)
+                                .parentId(request.getParentId())
+                                .keyword(request.getKeyword())
+                                .page(request.getPage())
+                                .size(request.getSize())
+                                .build();
     }
 }
