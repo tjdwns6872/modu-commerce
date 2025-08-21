@@ -24,4 +24,9 @@ public class CategoryPredicate {
         if(name == null || name.isBlank()) return null;
         return category.name.contains(name);
     }
+
+    public static BooleanExpression includeDeletedCheck(QModuCategory category, boolean includeDeleted){
+        if(includeDeleted == true) return null;
+        return category.isDeleted.eq(0);
+    }
 }

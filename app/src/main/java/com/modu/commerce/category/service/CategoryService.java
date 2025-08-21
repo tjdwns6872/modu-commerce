@@ -1,5 +1,7 @@
 package com.modu.commerce.category.service;
 
+import com.modu.commerce.category.dto.CategoryChildrenListRequest;
+import com.modu.commerce.category.dto.CategoryChildrenListResponse;
 import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryOneResponse;
@@ -12,4 +14,6 @@ public interface CategoryService {
     public CategoryOneResponse categoryOne(Long id);
 
     public CategoryListResponse categoryList(CategoryListRequest request);
+
+    public CategoryChildrenListResponse getChildrenList(CategoryChildrenListRequest request, Long id);
 }

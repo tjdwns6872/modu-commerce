@@ -37,8 +37,6 @@ public class ModuCategory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // @Column(name = "PARENT_ID")
-    // private Long parentId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private ModuCategory parent;
@@ -57,4 +55,17 @@ public class ModuCategory {
     @LastModifiedDate
     @Column(name = "UPDATED_AT")
     private LocalDateTime updatedAt;
+
+    @Column(name = "DELETED_AT")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "DELETED_BY")
+    private Long deletedBy;
+
+    @Column(name = "SORT_INDEX")
+    private int sortIndex;
+
+    @Column(name = "IS_DELETED", insertable=false, updatable=false)
+    private int isDeleted;
+
 }

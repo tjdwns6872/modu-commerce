@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.modu.commerce.category.dto.CategoryChildrenListRequest;
+import com.modu.commerce.category.dto.CategoryChildrenListResponse;
 import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryOneResponse;
@@ -69,6 +71,19 @@ public class CategoryAdminController {
         CommonResponseVO<CategoryListResponse> response = CommonResponseVO.<CategoryListResponse>builder()
             .code(HttpStatus.OK.value())
             .message("카테고리 목록 조회")
+            .data(data)
+            .build();
+        return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @GetMapping("/categories/{id}/children")
+    public ResponseEntity<CommonResponseVO<CategoryChildrenListResponse>> getChildrenList(@PathVariable Long id,
+                                                                                CategoryChildrenListRequest request){
+        CategoryChildrenListResponse data = categoryService.getChildrenList(request, id);
+        
+        CommonResponseVO<CategoryChildrenListResponse> response = CommonResponseVO.<CategoryChildrenListResponse>builder()
+            .code(HttpStatus.OK.value())
+            .message("자식 카테고리 목록 조회")
             .data(data)
             .build();
         return ResponseEntity.status(response.getCode()).body(response);

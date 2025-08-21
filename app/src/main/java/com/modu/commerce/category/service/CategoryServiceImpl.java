@@ -6,6 +6,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.modu.commerce.category.dto.CategoryChildrenListRequest;
+import com.modu.commerce.category.dto.CategoryChildrenListResponse;
 import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryOneResponse;
@@ -157,5 +159,63 @@ public class CategoryServiceImpl implements CategoryService{
                                 .page(request.getPage())
                                 .size(request.getSize())
                                 .build();
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public CategoryChildrenListResponse getChildrenList(CategoryChildrenListRequest request, Long id) {
+
+        QModuCategory mc = new QModuCategory("mc");
+        QModuCategory child = new QModuCategory("child");
+
+        Predicate condition = ExpressionUtils.allOf(
+            CategoryPredicate.parentIdEq(mc, id),
+            CategoryPredicate.includeDeletedCheck(mc, request.getIncludeDeleted())
+        );
+
+        if(!categoryRepository.existsByIdAndDeletedAtIsNull(id)) throw new CategoryNotFoundException();
+
+        Long categoryCount = 0L;
+
+        if(request.getIncludeDeleted()){
+            categoryCount = categoryRepository.countByParent_Id(id);
+        }else{
+            categoryCount = categoryRepository.countByParent_IdAndDeletedAtIsNull(id);
+        }
+
+
+        List<CategoryOneResponse> response = queryFactory.select(
+                                                    Projections.fields(
+                                                        CategoryOneResponse.class,
+                                                        mc.id.as("id"),
+                                                        mc.parent.id.as("parentId"),
+                                                        mc.name.as("name"),
+                                                        mc.depth.as("depth"),
+                                                        mc.createdAt.as("createdAt"),
+                                                        mc.updatedAt.as("updatedAt"),
+                                                        ExpressionUtils.as(
+                                                            JPAExpressions
+                                                                .selectOne()
+                                                                .from(child)
+                                                                .where(child.parent.id.eq(mc.id)
+                                                                        ,CategoryPredicate.includeDeletedCheck(child, false))
+                                                                .exists(),
+                                                            "hasChildren"   
+                                                        )
+                                                    ))
+                                            .from(mc)
+                                            .where(condition)
+                                            // .orderBy(mc.depth.asc(), mc.name.asc())
+                                            .orderBy(mc.id.asc())
+                                            .offset((long)request.getPage() * (long)request.getSize())
+                                            .limit(request.getSize())
+                                            .fetch();
+
+        return CategoryChildrenListResponse.builder()
+                                            .list(response)
+                                            .page(request.getPage())
+                                            .size(request.getSize())
+                                            .totalCount(categoryCount)
+                                            .build();
     }
 }
