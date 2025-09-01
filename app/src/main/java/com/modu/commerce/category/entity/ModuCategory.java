@@ -66,6 +66,6 @@ public class ModuCategory {
     private int sortIndex;
 
     @Column(name = "IS_DELETED", insertable=false, updatable=false)
-    private int isDeleted;
+    private Integer isDeleted;
 
 }
