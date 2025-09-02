@@ -13,10 +13,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.modu.commerce.category.dto.AdminCategoryListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListResponse;
-import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryListResponse;
+import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.service.CategoryService;
@@ -65,8 +66,18 @@ public class CategoryAdminController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<CommonResponseVO<CategoryListResponse>> getList(@ModelAttribute @Valid CategoryListRequest request){
-        CategoryListResponse data = categoryService.categoryList(request);
+    public ResponseEntity<CommonResponseVO<CategoryListResponse>> getList(@ModelAttribute @Valid AdminCategoryListRequest request){
+        
+        CategoryListSpec spec = CategoryListSpec.builder()
+                                .parentId(request.getParentId())
+                                .keyword(request.getKeyword())
+                                .includeDeleted(request.getIncludeDeleted())
+                                .withHasChildren(request.getWithHasChildren())
+                                .page(request.getPage())
+                                .size(request.getSize())
+                                .build();
+        
+        CategoryListResponse data = categoryService.categoryList(spec);
 
         CommonResponseVO<CategoryListResponse> response = CommonResponseVO.<CategoryListResponse>builder()
             .code(HttpStatus.OK.value())

@@ -1,7 +1,6 @@
 package com.modu.commerce.category.service;
 
 import java.util.List;
-import java.util.Objects;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -9,8 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.modu.commerce.category.dto.CategoryChildrenListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListResponse;
-import com.modu.commerce.category.dto.CategoryListRequest;
 import com.modu.commerce.category.dto.CategoryListResponse;
+import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.entity.ModuCategory;
@@ -22,10 +21,10 @@ import com.modu.commerce.category.exception.InvalidParentCategoryException;
 import com.modu.commerce.category.exception.ParentCategoryNotFound;
 import com.modu.commerce.category.repository.CategoryPredicate;
 import com.modu.commerce.category.repository.CategoryRepository;
+import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
 import com.querydsl.core.types.Projections;
-import com.querydsl.core.types.dsl.Expressions;
 import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 
@@ -112,7 +111,7 @@ public class CategoryServiceImpl implements CategoryService {
             return saved.getId();
 
         } catch (DataIntegrityViolationException e) {
-            // (선택) DB에 (parent_id, NAME, IS_DELETED) 유니크를 도입했다면 여기로 수렴
+            // (선택) DB 유니크 제약이 있다면 여기서 수렴
             throw new DuplicateCategoryNameUnderSameParent();
         }
     }
@@ -157,48 +156,89 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ---------------------------------------------
-    // 목록 조회: 기본 활성만 (includeDeleted 옵션 없음 = 활성만)
+    // 목록 조회 (Admin): includeDeleted/withHasChildren + orphan 제거
     // ---------------------------------------------
     @Override
     @Transactional(readOnly = true)
-    public CategoryListResponse categoryList(CategoryListRequest request) {
+    public CategoryListResponse categoryList(CategoryListSpec request) {
         log.info("\n{}", request);
 
-        final QModuCategory mc = QModuCategory.moduCategory;
+        final QModuCategory c = QModuCategory.moduCategory;
+        final QModuCategory p = new QModuCategory("parent");
         final QModuCategory child = new QModuCategory("child");
 
+        // 1) 공통 where (키워드/부모/삭제 + orphan 제거)
         Predicate condition = ExpressionUtils.allOf(
-                CategoryPredicate.nameContains(mc, request.getKeyword()),
-                CategoryPredicate.parentIdEq(mc, request.getParentId()),
-                mc.deletedAt.isNull() // 기본 활성만
+                CategoryPredicate.nameContains(c, request.getKeyword()),
+                CategoryPredicate.parentIdEq(c, request.getParentId()),
+                CategoryPredicate.includeDeletedCheck(c, Boolean.TRUE.equals(request.getIncludeDeleted()) ? true : false),
+                // orphan 제거: 루트이거나, 부모가 활성인 경우만 노출
+                ExpressionUtils.or(
+                        c.parent.isNull(),
+                        JPAExpressions
+                                .selectOne()
+                                .from(p)
+                                .where(p.id.eq(c.parent.id),
+                                       p.deletedAt.isNull())
+                                .exists()
+                )
         );
 
-        List<CategoryOneResponse> list = queryFactory
-                .select(Projections.fields(
-                        CategoryOneResponse.class,
-                        mc.id.as("id"),
-                        mc.parent.id.as("parentId"),
-                        mc.name.as("name"),
-                        mc.depth.as("depth"),
-                        mc.createdAt.as("createdAt"),
-                        mc.updatedAt.as("updatedAt"),
-                        // hasChildren: 활성 자식 기준
-                        ExpressionUtils.as(
-                                JPAExpressions
-                                        .selectOne()
-                                        .from(child)
-                                        .where(child.parent.id.eq(mc.id),
-                                               child.deletedAt.isNull())
-                                        .exists(),
-                                "hasChildren"
-                        )
-                ))
-                .from(mc)
-                .where(condition)
-                .orderBy(mc.depth.asc(), mc.name.asc())
-                .offset((long) request.getPage() * (long) request.getSize())
-                .limit(request.getSize())
-                .fetch();
+        final boolean withHasChildren = Boolean.TRUE.equals(request.getWithHasChildren());
+        final boolean includeDeleted  = Boolean.TRUE.equals(request.getIncludeDeleted());
+
+        List<CategoryOneResponse> list;
+
+        if (withHasChildren) {
+            // 2) withHasChildren=true → EXISTS(child where child.parent_id = c.id [and child.deletedAt is null])
+            Expression<Boolean> hasChildrenExpr = ExpressionUtils.as(
+                    JPAExpressions
+                            .selectOne()
+                            .from(child)
+                            .where(
+                                    child.parent.id.eq(c.id),
+                                    includeDeleted ? null : child.deletedAt.isNull()
+                            )
+                            .exists(),
+                    "hasChildren"
+            );
+
+            list = queryFactory
+                    .select(Projections.fields(
+                            CategoryOneResponse.class,
+                            c.id.as("id"),
+                            c.parent.id.as("parentId"),
+                            c.name.as("name"),
+                            c.depth.as("depth"),
+                            c.createdAt.as("createdAt"),
+                            c.updatedAt.as("updatedAt"),
+                            hasChildrenExpr // ★ flag=true에서만 projection 포함
+                    ))
+                    .from(c)
+                    .where(condition)
+                    .orderBy(c.id.asc()) // 임시 기본 정렬
+                    .offset((long) request.getPage() * (long) request.getSize()) // 0-based
+                    .limit(request.getSize())
+                    .fetch();
+        } else {
+            // 3) withHasChildren=false → projection 자체 제거(필드 미포함)
+            list = queryFactory
+                    .select(Projections.fields(
+                            CategoryOneResponse.class,
+                            c.id.as("id"),
+                            c.parent.id.as("parentId"),
+                            c.name.as("name"),
+                            c.depth.as("depth"),
+                            c.createdAt.as("createdAt"),
+                            c.updatedAt.as("updatedAt")
+                    ))
+                    .from(c)
+                    .where(condition)
+                    .orderBy(c.id.asc())
+                    .offset((long) request.getPage() * (long) request.getSize())
+                    .limit(request.getSize())
+                    .fetch();
+        }
 
         return CategoryListResponse.builder()
                 .list(list)
@@ -210,74 +250,87 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     // ---------------------------------------------
-    // 자식 목록: includeDeleted / withHasChildren 모두 반영
+    // 자식 목록 (Admin): includeDeleted/withHasChildren 모두 반영
     // ---------------------------------------------
     @Transactional(readOnly = true)
     @Override
     public CategoryChildrenListResponse getChildrenList(CategoryChildrenListRequest request, Long id) {
 
-        final QModuCategory mc = QModuCategory.moduCategory;
+        final QModuCategory c = QModuCategory.moduCategory;
         final QModuCategory child = new QModuCategory("child");
 
         // 부모 활성 선검증 (존재 + 삭제 안됨)
         boolean parentActive = categoryRepository.existsByIdAndDeletedAtIsNull(id);
         if (!parentActive) throw new CategoryNotFoundException();
 
+        final boolean includeDeleted  = Boolean.TRUE.equals(request.getIncludeDeleted());
+        final boolean withHasChildren = Boolean.TRUE.equals(request.getWithHasChildren());
+
         // 목록 조건: parent_id 매칭 + includeDeleted 여부
         Predicate condition = ExpressionUtils.allOf(
-                CategoryPredicate.parentIdEq(mc, id),
-                CategoryPredicate.includeDeletedCheck(mc, request.getIncludeDeleted())
+                c.parent.id.eq(id),
+                CategoryPredicate.includeDeletedCheck(c, includeDeleted)
         );
 
-        // totalCount: includeDeleted 반영
-        long totalCount;
-        if (Boolean.TRUE.equals(request.getIncludeDeleted())) {
-            totalCount = queryFactory
-                    .select(mc.id.count())
-                    .from(mc)
-                    .where(mc.parent.id.eq(id))
-                    .fetchOne();
-        } else {
-            totalCount = queryFactory
-                    .select(mc.id.count())
-                    .from(mc)
-                    .where(mc.parent.id.eq(id),
-                           mc.deletedAt.isNull())
-                    .fetchOne();
-        }
-
-        // withHasChildren=false면 exists 서브쿼리 스킵 → 성능 최적화
-        boolean withHasChildren = !Objects.isNull(request.getWithHasChildren()) && request.getWithHasChildren();
-
-        var hasChildrenExpr = withHasChildren
-                ? ExpressionUtils.as(
-                        JPAExpressions
-                                .selectOne()
-                                .from(child)
-                                .where(child.parent.id.eq(mc.id),
-                                       // hasChildren 판단은 항상 "활성 자식" 기준
-                                       child.deletedAt.isNull())
-                                .exists(),
-                        "hasChildren")
-                : ExpressionUtils.as(Expressions.FALSE, "hasChildren");
-
-        List<CategoryOneResponse> list = queryFactory
-                .select(Projections.fields(
-                        CategoryOneResponse.class,
-                        mc.id.as("id"),
-                        mc.parent.id.as("parentId"),
-                        mc.name.as("name"),
-                        mc.depth.as("depth"),
-                        mc.createdAt.as("createdAt"),
-                        mc.updatedAt.as("updatedAt"),
-                        hasChildrenExpr
-                ))
-                .from(mc)
+        // totalCount: 동일 조건으로 계산
+        long totalCount = queryFactory
+                .select(c.id.count())
+                .from(c)
                 .where(condition)
-                .orderBy(mc.id.asc()) // 임시 정렬
-                .offset((long) request.getPage() * (long) request.getSize())
-                .limit(request.getSize())
-                .fetch();
+                .fetchOne();
+
+        List<CategoryOneResponse> list;
+
+        if (withHasChildren) {
+            // 손자 존재 여부까지 판단(가시성 규칙 동일 적용)
+            Expression<Boolean> hasChildrenExpr = ExpressionUtils.as(
+                    JPAExpressions
+                            .selectOne()
+                            .from(child)
+                            .where(
+                                    child.parent.id.eq(c.id),
+                                    includeDeleted ? null : child.deletedAt.isNull()
+                            )
+                            .exists(),
+                    "hasChildren"
+            );
+
+            list = queryFactory
+                    .select(Projections.fields(
+                            CategoryOneResponse.class,
+                            c.id.as("id"),
+                            c.parent.id.as("parentId"),
+                            c.name.as("name"),
+                            c.depth.as("depth"),
+                            c.createdAt.as("createdAt"),
+                            c.updatedAt.as("updatedAt"),
+                            hasChildrenExpr
+                    ))
+                    .from(c)
+                    .where(condition)
+                    .orderBy(c.id.asc()) // 임시 정렬
+                    .offset((long) request.getPage() * (long) request.getSize())
+                    .limit(request.getSize())
+                    .fetch();
+
+        } else {
+            list = queryFactory
+                    .select(Projections.fields(
+                            CategoryOneResponse.class,
+                            c.id.as("id"),
+                            c.parent.id.as("parentId"),
+                            c.name.as("name"),
+                            c.depth.as("depth"),
+                            c.createdAt.as("createdAt"),
+                            c.updatedAt.as("updatedAt")
+                    ))
+                    .from(c)
+                    .where(condition)
+                    .orderBy(c.id.asc())
+                    .offset((long) request.getPage() * (long) request.getSize())
+                    .limit(request.getSize())
+                    .fetch();
+        }
 
         return CategoryChildrenListResponse.builder()
                 .list(list)

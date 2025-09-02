@@ -27,6 +27,6 @@ public class CategoryPredicate {
 
     public static BooleanExpression includeDeletedCheck(QModuCategory category, boolean includeDeleted){
         if(includeDeleted == true) return null;
-        return category.isDeleted.eq(0);
+        return category.deletedAt.isNull();
     }
 }

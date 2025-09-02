@@ -2,20 +2,15 @@ package com.modu.commerce.common.util;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import lombok.Builder;
 import lombok.Data;
-import lombok.experimental.SuperBuilder;
 
 @Data
-@SuperBuilder
-public class PagingUtil {
+public class RequestPaingUtil {
     
     @Min(0)
-    @Builder.Default
     protected int page=0;
 
     @Min(10)
     @Max(50)
-    @Builder.Default
     protected int size=10;
 }
