@@ -15,4 +15,5 @@ public class CategoryListResponse {
     private String keyword;
     private int page;
     private int size;
+    private Long totalCount;
 }

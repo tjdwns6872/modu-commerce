@@ -167,11 +167,14 @@ public class CategoryServiceImpl implements CategoryService {
         final QModuCategory p = new QModuCategory("parent");
         final QModuCategory child = new QModuCategory("child");
 
+        final boolean withHasChildren = Boolean.TRUE.equals(request.getWithHasChildren());
+        final boolean includeDeleted  = Boolean.TRUE.equals(request.getIncludeDeleted());
+
         // 1) 공통 where (키워드/부모/삭제 + orphan 제거)
         Predicate condition = ExpressionUtils.allOf(
                 CategoryPredicate.nameContains(c, request.getKeyword()),
                 CategoryPredicate.parentIdEq(c, request.getParentId()),
-                CategoryPredicate.includeDeletedCheck(c, Boolean.TRUE.equals(request.getIncludeDeleted()) ? true : false),
+                CategoryPredicate.includeDeletedCheck(c, includeDeleted),
                 // orphan 제거: 루트이거나, 부모가 활성인 경우만 노출
                 ExpressionUtils.or(
                         c.parent.isNull(),
@@ -184,10 +187,9 @@ public class CategoryServiceImpl implements CategoryService {
                 )
         );
 
-        final boolean withHasChildren = Boolean.TRUE.equals(request.getWithHasChildren());
-        final boolean includeDeleted  = Boolean.TRUE.equals(request.getIncludeDeleted());
-
         List<CategoryOneResponse> list;
+
+        Long totalCount = queryFactory.select(c.id.count()).from(c).where(condition).fetchOne();
 
         if (withHasChildren) {
             // 2) withHasChildren=true → EXISTS(child where child.parent_id = c.id [and child.deletedAt is null])
@@ -246,6 +248,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .keyword(request.getKeyword())
                 .page(request.getPage())
                 .size(request.getSize())
+                .totalCount(totalCount)
                 .build();
     }
 
@@ -273,12 +276,8 @@ public class CategoryServiceImpl implements CategoryService {
         );
 
         // totalCount: 동일 조건으로 계산
-        long totalCount = queryFactory
-                .select(c.id.count())
-                .from(c)
-                .where(condition)
-                .fetchOne();
-
+        Long totalCount = queryFactory.select(c.id.count()).from(c).where(condition).fetchOne();
+        
         List<CategoryOneResponse> list;
 
         if (withHasChildren) {
