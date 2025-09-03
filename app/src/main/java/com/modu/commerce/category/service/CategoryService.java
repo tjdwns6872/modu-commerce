@@ -2,6 +2,7 @@ package com.modu.commerce.category.service;
 
 import com.modu.commerce.category.dto.CategoryChildrenListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListResponse;
+import com.modu.commerce.category.dto.CategoryDeleteSpec;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
@@ -16,4 +17,6 @@ public interface CategoryService {
     public CategoryListResponse categoryList(CategoryListSpec request);
 
     public CategoryChildrenListResponse getChildrenList(CategoryChildrenListRequest request, Long id);
+
+    public void categorySoftDelete(CategoryDeleteSpec request);
 }

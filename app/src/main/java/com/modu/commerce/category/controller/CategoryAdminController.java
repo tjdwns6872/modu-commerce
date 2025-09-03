@@ -5,6 +5,8 @@ import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,12 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
 import com.modu.commerce.category.dto.AdminCategoryListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListResponse;
+import com.modu.commerce.category.dto.CategoryDeleteSpec;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.service.CategoryService;
 import com.modu.commerce.common.api.response.CommonResponseVO;
+import com.modu.commerce.security.CustomUserDetails;
 
 import jakarta.validation.Valid;
 
@@ -98,5 +102,17 @@ public class CategoryAdminController {
             .data(data)
             .build();
         return ResponseEntity.status(response.getCode()).body(response);
+    }
+
+    @DeleteMapping("/categories/{id}")
+    public ResponseEntity<Void> categorySoftDelete(@AuthenticationPrincipal CustomUserDetails details, @PathVariable Long id){
+        
+        CategoryDeleteSpec spec = CategoryDeleteSpec.builder()
+                                    .id(id)
+                                    .actorId(details.getId())
+                                    .build();
+        categoryService.categorySoftDelete(spec);
+        
+        return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(null);
     }
 }

@@ -1,5 +1,6 @@
 package com.modu.commerce.category.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.modu.commerce.category.dto.CategoryChildrenListRequest;
 import com.modu.commerce.category.dto.CategoryChildrenListResponse;
+import com.modu.commerce.category.dto.CategoryDeleteSpec;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
@@ -337,5 +339,37 @@ public class CategoryServiceImpl implements CategoryService {
                 .size(request.getSize())
                 .totalCount(totalCount)
                 .build();
+    }
+
+    @Transactional
+    @Override
+    public void categorySoftDelete(CategoryDeleteSpec request) {
+        if (request.getId() == null || request.getId() == 0L) throw new InvalidParentCategoryException("잘못된 카테고리 id입니다.");
+
+        final QModuCategory mc = QModuCategory.moduCategory;
+
+        LocalDateTime now = LocalDateTime.now();
+
+        log.debug("CATEGROY DELETE ID : {}", request.getId());
+        log.debug("CATEGROY DELETE ACTORID : {}", request.getActorId());
+        long affected = queryFactory
+                .update(mc)
+                .set(mc.deletedAt, now)
+                .set(mc.deletedBy, request.getActorId())
+                .where(mc.id.eq(request.getId()), mc.deletedAt.isNull())
+                .execute();
+
+        if (affected == 1) {
+            // 정상 삭제 → 204 (컨트롤러에서 no body로 반환)
+            log.info("CATEGROY DELETE SUCCESS");
+            return;
+        }
+    
+        // 2) 영향 없음 → 존재 여부로 분기
+        boolean exists = categoryRepository.existsById(request.getId());
+        if (!exists) {
+            // 미존재 → 404
+            throw new CategoryNotFoundException();
+        }
     }
 }
