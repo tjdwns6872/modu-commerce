@@ -55,4 +55,10 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(CommonResponseVO.of(500, "서버 오류가 발생했습니다.", null, traceId()));
     }
+
+    @ExceptionHandler(InvalidPageRequest.class)
+    public ResponseEntity<CommonResponseVO<Object>> invalidPageRequest(Exception ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(CommonResponseVO.of(400, "잘못된 페이지 이동입니다.", null, traceId()));
+    }
 }

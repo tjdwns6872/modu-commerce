@@ -13,16 +13,20 @@ import com.modu.commerce.category.dto.CategoryDeleteSpec;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
+import com.modu.commerce.category.dto.CategoryOneSpec;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.entity.ModuCategory;
 import com.modu.commerce.category.entity.QModuCategory;
 import com.modu.commerce.category.exception.CategoryNotFoundException;
 import com.modu.commerce.category.exception.DuplicateCategoryNameUnderSameParent;
+import com.modu.commerce.category.exception.DuplicateCategoryNameUnderSameParentOnRestore;
 import com.modu.commerce.category.exception.InvalidCategoryNameException;
 import com.modu.commerce.category.exception.InvalidParentCategoryException;
+import com.modu.commerce.category.exception.ParentCategoryDeletedOnRestore;
 import com.modu.commerce.category.exception.ParentCategoryNotFound;
 import com.modu.commerce.category.repository.CategoryPredicate;
 import com.modu.commerce.category.repository.CategoryRepository;
+import com.modu.commerce.common.exception.InvalidPageRequest;
 import com.querydsl.core.types.Expression;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
@@ -123,8 +127,8 @@ public class CategoryServiceImpl implements CategoryService {
     // ---------------------------------------------
     @Transactional(readOnly = true)
     @Override
-    public CategoryOneResponse categoryOne(Long id) {
-        if (id == null || id == 0L) throw new InvalidParentCategoryException("잘못된 카테고리 id입니다.");
+    public CategoryOneResponse categoryOne(CategoryOneSpec request) {
+        if (request.getId() == null || request.getId() == 0L) throw new InvalidParentCategoryException("잘못된 카테고리 id입니다.");
 
         final QModuCategory mc = QModuCategory.moduCategory;
         final QModuCategory child = new QModuCategory("child");
@@ -143,14 +147,14 @@ public class CategoryServiceImpl implements CategoryService {
                                         .selectOne()
                                         .from(child)
                                         .where(child.parent.id.eq(mc.id),
-                                               child.deletedAt.isNull())
+                                               request.getIncludeDeleted() ? null : child.deletedAt.isNull())
                                         .exists(),
                                 "hasChildren"
                         )
                 ))
                 .from(mc)
-                .where(mc.id.eq(id),
-                       mc.deletedAt.isNull())
+                .where(mc.id.eq(request.getId()),
+                       request.getIncludeDeleted() ? null : mc.deletedAt.isNull())
                 .fetchOne();
 
         if (data == null) throw new CategoryNotFoundException();
@@ -162,8 +166,19 @@ public class CategoryServiceImpl implements CategoryService {
     // ---------------------------------------------
     @Override
     @Transactional(readOnly = true)
-    public CategoryListResponse categoryList(CategoryListSpec request) {
+    public CategoryListResponse categoryList(CategoryListSpec request) throws InvalidPageRequest {
         log.info("\n{}", request);
+
+        if(request.getPage() == null){
+                request.setPage(0);
+        }
+        if(request.getSize() == null){
+                request.setSize(20);
+        }
+
+        if(request.getPage() < 0 || (request.getSize() < 10 || request.getSize() > 100)){
+                throw new InvalidPageRequest("잘못된 페이지 이동입니다.");
+        }
 
         final QModuCategory c = QModuCategory.moduCategory;
         final QModuCategory p = new QModuCategory("parent");
@@ -220,7 +235,7 @@ public class CategoryServiceImpl implements CategoryService {
                     ))
                     .from(c)
                     .where(condition)
-                    .orderBy(c.id.asc()) // 임시 기본 정렬
+                    .orderBy(c.sortIndex.asc(), c.id.asc())
                     .offset((long) request.getPage() * (long) request.getSize()) // 0-based
                     .limit(request.getSize())
                     .fetch();
@@ -238,7 +253,7 @@ public class CategoryServiceImpl implements CategoryService {
                     ))
                     .from(c)
                     .where(condition)
-                    .orderBy(c.id.asc())
+                    .orderBy(c.sortIndex.asc(), c.id.asc())
                     .offset((long) request.getPage() * (long) request.getSize())
                     .limit(request.getSize())
                     .fetch();
@@ -259,7 +274,18 @@ public class CategoryServiceImpl implements CategoryService {
     // ---------------------------------------------
     @Transactional(readOnly = true)
     @Override
-    public CategoryChildrenListResponse getChildrenList(CategoryChildrenListRequest request, Long id) {
+    public CategoryChildrenListResponse getChildrenList(CategoryChildrenListRequest request, Long id) throws InvalidPageRequest {
+
+        if(request.getPage() == null){
+                request.setPage(0);
+        }
+        if(request.getSize() == null){
+                request.setSize(20);
+        }
+
+        if(request.getPage() < 0 || (request.getSize() < 10 || request.getSize() > 100)){
+                throw new InvalidPageRequest("잘못된 페이지 이동입니다.");
+        }
 
         final QModuCategory c = QModuCategory.moduCategory;
         final QModuCategory child = new QModuCategory("child");
@@ -309,7 +335,7 @@ public class CategoryServiceImpl implements CategoryService {
                     ))
                     .from(c)
                     .where(condition)
-                    .orderBy(c.id.asc()) // 임시 정렬
+                    .orderBy(c.sortIndex.asc(), c.id.asc())
                     .offset((long) request.getPage() * (long) request.getSize())
                     .limit(request.getSize())
                     .fetch();
@@ -327,7 +353,7 @@ public class CategoryServiceImpl implements CategoryService {
                     ))
                     .from(c)
                     .where(condition)
-                    .orderBy(c.id.asc())
+                    .orderBy(c.sortIndex.asc(), c.id.asc())
                     .offset((long) request.getPage() * (long) request.getSize())
                     .limit(request.getSize())
                     .fetch();
@@ -371,5 +397,80 @@ public class CategoryServiceImpl implements CategoryService {
             // 미존재 → 404
             throw new CategoryNotFoundException();
         }
+    }
+
+    @Transactional
+    @Override
+    public void categoryRestore(Long id) {
+        if (id == null || id == 0L) throw new InvalidParentCategoryException("잘못된 카테고리 id입니다.");
+
+        final QModuCategory mc = QModuCategory.moduCategory;
+
+        ModuCategory target = queryFactory
+                .selectFrom(mc)
+                .where(mc.id.eq(id))
+                .fetchOne();
+
+        if (target == null) throw new CategoryNotFoundException();
+
+        if (target.getDeletedAt() == null) {
+                log.info("CATEGORY RESTORE NO-OP id={}", id);
+                return;
+        }
+
+        final Long parentId = (target.getParent() == null) ? null : target.getParent().getId();
+        final String name = target.getName();
+
+        if (parentId != null) {
+                boolean parentActive = queryFactory
+                        .selectOne()
+                        .from(mc)
+                        .where(mc.id.eq(parentId),
+                               mc.deletedAt.isNull())
+                        .fetchFirst() != null;
+
+                if (!parentActive) {
+                    throw new ParentCategoryDeletedOnRestore("부모가 삭제되어 복원할 수 없습니다.");
+                }
+        }
+
+        boolean dupExists;
+        if (parentId == null) {
+                dupExists = queryFactory
+                        .selectOne()
+                        .from(mc)
+                        .where(mc.deletedAt.isNull(),
+                               mc.parent.isNull(),
+                               mc.name.eq(name))
+                        .fetchFirst() != null;
+        } else {
+            dupExists = queryFactory
+                    .selectOne()
+                    .from(mc)
+                    .where(mc.deletedAt.isNull(),
+                           mc.parent.id.eq(parentId),
+                           mc.name.eq(name))
+                    .fetchFirst() != null;
+        }
+
+        if (dupExists) {
+            throw new DuplicateCategoryNameUnderSameParentOnRestore("동일한 이름의 활성 카테고리가 이미 존재합니다.");
+        }
+
+        long affected = queryFactory
+            .update(mc)
+            .setNull(mc.deletedAt)
+            .setNull(mc.deletedBy)
+            .where(mc.id.eq(id),
+                   mc.deletedAt.isNotNull())
+            .execute();
+
+        if (affected == 1) {
+            log.info("CATEGORY RESTORE SUCCESS id={}", id);
+            return;
+        }
+
+        boolean exists = categoryRepository.existsById(id);
+        if (!exists) throw new CategoryNotFoundException();
     }
 }

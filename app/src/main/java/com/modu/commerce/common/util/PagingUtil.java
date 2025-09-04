@@ -12,10 +12,10 @@ public class PagingUtil {
     
     @Min(0)
     @Builder.Default
-    protected int page=0;
+    protected Integer page=0;
 
     @Min(10)
-    @Max(50)
+    @Max(100)
     @Builder.Default
-    protected int size=10;
+    protected Integer size=20;
 }

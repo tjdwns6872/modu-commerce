@@ -9,10 +9,12 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.modu.commerce.category.dto.AdminCategoryListRequest;
@@ -22,9 +24,11 @@ import com.modu.commerce.category.dto.CategoryDeleteSpec;
 import com.modu.commerce.category.dto.CategoryListResponse;
 import com.modu.commerce.category.dto.CategoryListSpec;
 import com.modu.commerce.category.dto.CategoryOneResponse;
+import com.modu.commerce.category.dto.CategoryOneSpec;
 import com.modu.commerce.category.dto.CategoryRequest;
 import com.modu.commerce.category.service.CategoryService;
 import com.modu.commerce.common.api.response.CommonResponseVO;
+import com.modu.commerce.common.exception.InvalidPageRequest;
 import com.modu.commerce.security.CustomUserDetails;
 
 import jakarta.validation.Valid;
@@ -57,8 +61,12 @@ public class CategoryAdminController {
     }
 
     @GetMapping("/categories/{id}")
-    public ResponseEntity<CommonResponseVO<CategoryOneResponse>> getOne(@PathVariable Long id){
-        CategoryOneResponse data = categoryService.categoryOne(id);
+    public ResponseEntity<CommonResponseVO<CategoryOneResponse>> getOne(@PathVariable Long id, @RequestParam(defaultValue = "false") boolean includeDeleted){
+        CategoryOneSpec spec = CategoryOneSpec.builder()
+                                .id(id)
+                                .includeDeleted(includeDeleted)
+                                .build();
+        CategoryOneResponse data = categoryService.categoryOne(spec);
 
         CommonResponseVO<CategoryOneResponse> response = CommonResponseVO.<CategoryOneResponse>builder()
             .code(HttpStatus.OK.value())
@@ -70,7 +78,7 @@ public class CategoryAdminController {
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<CommonResponseVO<CategoryListResponse>> getList(@ModelAttribute @Valid AdminCategoryListRequest request){
+    public ResponseEntity<CommonResponseVO<CategoryListResponse>> getList(@ModelAttribute @Valid AdminCategoryListRequest request) throws InvalidPageRequest{
         
         CategoryListSpec spec = CategoryListSpec.builder()
                                 .parentId(request.getParentId())
@@ -93,7 +101,7 @@ public class CategoryAdminController {
 
     @GetMapping("/categories/{id}/children")
     public ResponseEntity<CommonResponseVO<CategoryChildrenListResponse>> getChildrenList(@PathVariable Long id,
-                                                                                CategoryChildrenListRequest request){
+                                                                                @ModelAttribute @Valid CategoryChildrenListRequest request) throws InvalidPageRequest{
         CategoryChildrenListResponse data = categoryService.getChildrenList(request, id);
         
         CommonResponseVO<CategoryChildrenListResponse> response = CommonResponseVO.<CategoryChildrenListResponse>builder()
@@ -113,6 +121,12 @@ public class CategoryAdminController {
                                     .build();
         categoryService.categorySoftDelete(spec);
         
+        return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(null);
+    }
+
+    @PatchMapping("/categories/{id}/restore")
+    public ResponseEntity<Void> categoryRestore(@PathVariable Long id){
+        categoryService.categoryRestore(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT.value()).body(null);
     }
 }

@@ -5,12 +5,12 @@ import jakarta.validation.constraints.Min;
 import lombok.Data;
 
 @Data
-public class RequestPaingUtil {
+public class RequestPaging {
     
     @Min(0)
-    protected int page=0;
+    protected Integer page=0;
 
     @Min(10)
-    @Max(50)
-    protected int size=10;
+    @Max(100)
+    protected Integer size=20;
 }
