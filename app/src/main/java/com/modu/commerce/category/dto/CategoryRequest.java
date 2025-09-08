@@ -3,9 +3,11 @@ package com.modu.commerce.category.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class CategoryRequest {
 
     @Positive(message = "parentId는 null(루트) 또는 양수(자식)만 허용합니다.")
