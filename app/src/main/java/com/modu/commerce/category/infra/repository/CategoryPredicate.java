@@ -1,6 +1,6 @@
 package com.modu.commerce.category.infra.repository;
 
-import com.modu.commerce.category.entity.QModuCategory;
+import com.modu.commerce.category.domain.entity.QModuCategory;
 import com.querydsl.core.types.dsl.BooleanExpression;
 
 public class CategoryPredicate {

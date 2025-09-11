@@ -13,6 +13,7 @@ import com.modu.commerce.category.api.admin.dto.response.CategoryChildrenListRes
 import com.modu.commerce.category.api.admin.dto.response.CategoryListResponse;
 import com.modu.commerce.category.api.admin.dto.response.CategoryOneResponse;
 import com.modu.commerce.category.domain.entity.ModuCategory;
+import com.modu.commerce.category.domain.entity.QModuCategory;
 import com.modu.commerce.category.domain.exception.CategoryNotFoundException;
 import com.modu.commerce.category.domain.exception.DuplicateCategoryNameUnderSameParent;
 import com.modu.commerce.category.domain.exception.DuplicateCategoryNameUnderSameParentOnRestore;
@@ -23,7 +24,6 @@ import com.modu.commerce.category.domain.exception.ParentCategoryNotFound;
 import com.modu.commerce.category.domain.spec.CategoryDeleteSpec;
 import com.modu.commerce.category.domain.spec.CategoryListSpec;
 import com.modu.commerce.category.domain.spec.CategoryOneSpec;
-import com.modu.commerce.category.entity.QModuCategory;
 import com.modu.commerce.category.infra.repository.CategoryPredicate;
 import com.modu.commerce.category.infra.repository.CategoryRepository;
 import com.modu.commerce.common.exception.InvalidPageRequest;
