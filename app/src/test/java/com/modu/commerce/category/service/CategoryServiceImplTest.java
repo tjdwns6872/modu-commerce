@@ -1,14 +1,16 @@
 package com.modu.commerce.category.service;
 
-import com.modu.commerce.category.dto.CategoryRequest;
-import com.modu.commerce.category.dto.CategoryOneResponse;
-import com.modu.commerce.category.dto.CategoryOneSpec;
-import com.modu.commerce.category.entity.ModuCategory;
-import com.modu.commerce.category.exception.CategoryNotFoundException;
-import com.modu.commerce.category.exception.DuplicateCategoryNameUnderSameParent;
-import com.modu.commerce.category.exception.InvalidCategoryNameException;
-import com.modu.commerce.category.exception.ParentCategoryNotFound;
-import com.modu.commerce.category.repository.CategoryRepository;
+import com.modu.commerce.category.api.admin.dto.request.CategoryRequest;
+import com.modu.commerce.category.api.admin.dto.response.CategoryOneResponse;
+import com.modu.commerce.category.app.service.CategoryService;
+import com.modu.commerce.category.domain.entity.ModuCategory;
+import com.modu.commerce.category.domain.exception.CategoryNotFoundException;
+import com.modu.commerce.category.domain.exception.DuplicateCategoryNameUnderSameParent;
+import com.modu.commerce.category.domain.exception.InvalidCategoryNameException;
+import com.modu.commerce.category.domain.exception.ParentCategoryNotFound;
+import com.modu.commerce.category.domain.spec.CategoryOneSpec;
+import com.modu.commerce.category.infra.repository.CategoryRepository;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
