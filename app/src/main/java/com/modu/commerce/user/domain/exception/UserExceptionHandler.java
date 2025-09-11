@@ -1,4 +1,4 @@
-package com.modu.commerce.user.exception;
+package com.modu.commerce.user.domain.exception;
 
 import org.springframework.core.annotation.Order;
 import org.springframework.core.Ordered;

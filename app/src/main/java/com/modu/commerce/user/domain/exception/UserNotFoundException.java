@@ -1,4 +1,4 @@
-package com.modu.commerce.user.exception;
+package com.modu.commerce.user.domain.exception;
 
 import com.modu.commerce.common.exception.NotFoundException;
 

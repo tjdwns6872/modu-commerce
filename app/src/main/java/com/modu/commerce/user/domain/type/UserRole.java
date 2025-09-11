@@ -1,11 +1,11 @@
-package com.modu.commerce.user;
+package com.modu.commerce.user.domain.type;
 
-public enum RoleEnum {
+public enum UserRole {
     USER("USER"), ADMIN("ADMIN");
 
     private final String name;
 
-    RoleEnum(String name){
+    UserRole(String name){
         this.name = name;
     }
 

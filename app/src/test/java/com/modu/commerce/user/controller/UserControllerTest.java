@@ -16,10 +16,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.modu.commerce.user.dto.UserLoginRequest;
-import com.modu.commerce.user.dto.UserLoginResponse;
-import com.modu.commerce.user.dto.UserSignupRequest;
-import com.modu.commerce.user.service.UserService;
+import com.modu.commerce.user.api.dto.request.UserLoginRequest;
+import com.modu.commerce.user.api.dto.request.UserSignupRequest;
+import com.modu.commerce.user.api.dto.response.UserLoginResponse;
+import com.modu.commerce.user.app.service.UserService;
 
 // @WebMvcTest(UserController.class) //테스트 대상 컨트롤러 지정
 // @Import(SecurityConfig.class)

@@ -1,4 +1,4 @@
-package com.modu.commerce.user.dto;
+package com.modu.commerce.user.api.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

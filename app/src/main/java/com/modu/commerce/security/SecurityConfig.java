@@ -1,8 +1,8 @@
-package com.modu.commerce.user.config;
+package com.modu.commerce.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.modu.commerce.common.api.response.CommonResponseVO;
-import com.modu.commerce.security.JwtAuthenticationFilter;
+
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.context.annotation.Bean;

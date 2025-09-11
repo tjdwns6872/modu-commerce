@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.modu.commerce.user.entity.ModuUser;
+import com.modu.commerce.user.domain.entity.ModuUser;
 
 import lombok.Getter;
 

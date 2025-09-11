@@ -1,4 +1,4 @@
-package com.modu.commerce.user.exception;
+package com.modu.commerce.user.domain.exception;
 
 public class DormantAccountException extends StatusException{
     

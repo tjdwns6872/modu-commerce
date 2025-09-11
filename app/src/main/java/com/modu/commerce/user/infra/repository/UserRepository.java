@@ -1,8 +1,8 @@
-package com.modu.commerce.user.repository;
+package com.modu.commerce.user.infra.repository;
 
 import org.springframework.stereotype.Repository;
 
-import com.modu.commerce.user.entity.ModuUser;
+import com.modu.commerce.user.domain.entity.ModuUser;
 
 import java.util.Optional;
 

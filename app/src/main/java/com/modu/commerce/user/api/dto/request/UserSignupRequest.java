@@ -1,8 +1,8 @@
-package com.modu.commerce.user.dto;
+package com.modu.commerce.user.api.dto.request;
 
-import com.modu.commerce.user.RoleEnum;
-import com.modu.commerce.user.StatusEnum;
-import com.modu.commerce.user.entity.ModuUser;
+import com.modu.commerce.user.domain.entity.ModuUser;
+import com.modu.commerce.user.domain.type.UserRole;
+import com.modu.commerce.user.domain.type.UserStatus;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -20,7 +20,7 @@ public class UserSignupRequest {
 
     private String nickname;
 
-    public ModuUser toEntity(String password, RoleEnum role, StatusEnum status){
+    public ModuUser toEntity(String password, UserRole role, UserStatus status){
         return ModuUser.builder()
                 .email(this.email)
                 .password(password)

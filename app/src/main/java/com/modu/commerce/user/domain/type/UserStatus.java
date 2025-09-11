@@ -1,10 +1,10 @@
-package com.modu.commerce.user;
+package com.modu.commerce.user.domain.type;
 
-import com.modu.commerce.user.exception.DormantAccountException;
-import com.modu.commerce.user.exception.StatusException;
-import com.modu.commerce.user.exception.WithdrawalAccountException;
+import com.modu.commerce.user.domain.exception.DormantAccountException;
+import com.modu.commerce.user.domain.exception.StatusException;
+import com.modu.commerce.user.domain.exception.WithdrawalAccountException;
 
-public enum StatusEnum {
+public enum UserStatus {
     ACTIVE(200, "로그인에 성공했습니다."){
         @Override
         public StatusException getException(){
@@ -27,7 +27,7 @@ public enum StatusEnum {
     private final int code;
     private final String message;
 
-    StatusEnum(int code, String message){
+    UserStatus(int code, String message){
         this.message = message;
         this.code = code;
     }

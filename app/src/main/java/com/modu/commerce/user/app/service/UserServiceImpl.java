@@ -1,21 +1,21 @@
-package com.modu.commerce.user.service;
+package com.modu.commerce.user.app.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.modu.commerce.security.JwtTokenProvider;
-import com.modu.commerce.user.RoleEnum;
-import com.modu.commerce.user.StatusEnum;
-import com.modu.commerce.user.dto.UserDetailResponse;
-import com.modu.commerce.user.dto.UserLoginRequest;
-import com.modu.commerce.user.dto.UserLoginResponse;
-import com.modu.commerce.user.dto.UserSignupRequest;
-import com.modu.commerce.user.entity.ModuUser;
-import com.modu.commerce.user.exception.EmailAlreadyExistsException;
-import com.modu.commerce.user.exception.InvalidCredentialsException;
-import com.modu.commerce.user.exception.StatusException;
-import com.modu.commerce.user.exception.UserNotFoundException;
-import com.modu.commerce.user.repository.UserRepository;
+import com.modu.commerce.user.api.dto.request.UserLoginRequest;
+import com.modu.commerce.user.api.dto.request.UserSignupRequest;
+import com.modu.commerce.user.api.dto.response.UserDetailResponse;
+import com.modu.commerce.user.api.dto.response.UserLoginResponse;
+import com.modu.commerce.user.domain.entity.ModuUser;
+import com.modu.commerce.user.domain.exception.EmailAlreadyExistsException;
+import com.modu.commerce.user.domain.exception.InvalidCredentialsException;
+import com.modu.commerce.user.domain.exception.StatusException;
+import com.modu.commerce.user.domain.exception.UserNotFoundException;
+import com.modu.commerce.user.domain.type.UserRole;
+import com.modu.commerce.user.domain.type.UserStatus;
+import com.modu.commerce.user.infra.repository.UserRepository;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -44,8 +44,8 @@ public class UserServiceImpl implements UserService{
             throw new EmailAlreadyExistsException();
         }
         ModuUser entity = request.toEntity(passwordEncoder.encode(request.getPassword())
-                                        , RoleEnum.USER
-                                        , StatusEnum.ACTIVE);
+                                        , UserRole.USER
+                                        , UserStatus.ACTIVE);
 
         entity = userRepository.save(entity);
         log.info("SIGNUP SUCCESS");

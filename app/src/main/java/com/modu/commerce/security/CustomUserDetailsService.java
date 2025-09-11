@@ -4,7 +4,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import com.modu.commerce.user.repository.UserRepository;
+import com.modu.commerce.user.infra.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 

@@ -12,15 +12,16 @@ import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import com.modu.commerce.user.RoleEnum;
-import com.modu.commerce.user.StatusEnum;
-import com.modu.commerce.user.dto.UserLoginRequest;
-import com.modu.commerce.user.dto.UserLoginResponse;
-import com.modu.commerce.user.dto.UserSignupRequest;
-import com.modu.commerce.user.entity.ModuUser;
-import com.modu.commerce.user.exception.EmailAlreadyExistsException;
-import com.modu.commerce.user.exception.InvalidCredentialsException;
-import com.modu.commerce.user.repository.UserRepository;
+import com.modu.commerce.user.api.dto.request.UserLoginRequest;
+import com.modu.commerce.user.api.dto.request.UserSignupRequest;
+import com.modu.commerce.user.api.dto.response.UserLoginResponse;
+import com.modu.commerce.user.app.service.UserServiceImpl;
+import com.modu.commerce.user.domain.entity.ModuUser;
+import com.modu.commerce.user.domain.exception.EmailAlreadyExistsException;
+import com.modu.commerce.user.domain.exception.InvalidCredentialsException;
+import com.modu.commerce.user.domain.type.UserRole;
+import com.modu.commerce.user.domain.type.UserStatus;
+import com.modu.commerce.user.infra.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceImplTest {
@@ -47,8 +48,8 @@ public class UserServiceImplTest {
             .email(request.getEmail())
             .password("encodedPw")
             .nickname("nick")
-            .role(RoleEnum.USER)
-            .status(StatusEnum.ACTIVE)
+            .role(UserRole.USER)
+            .status(UserStatus.ACTIVE)
             .build();
         when(userRepository.save(any(ModuUser.class))).thenReturn(savedUser);
 

@@ -1,4 +1,4 @@
-package com.modu.commerce.user.dto;
+package com.modu.commerce.user.api.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

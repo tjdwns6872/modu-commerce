@@ -1,4 +1,4 @@
-package com.modu.commerce.user.entity;
+package com.modu.commerce.user.domain.entity;
 
 import java.time.LocalDateTime;
 
@@ -6,8 +6,8 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.modu.commerce.user.RoleEnum;
-import com.modu.commerce.user.StatusEnum;
+import com.modu.commerce.user.domain.type.UserRole;
+import com.modu.commerce.user.domain.type.UserStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,11 +49,11 @@ public class ModuUser {
 
     @Column(name = "ROLE")
     @Enumerated(EnumType.STRING)
-    private RoleEnum role;
+    private UserRole role;
 
     @Column(name = "STATUS")
     @Enumerated(EnumType.STRING)
-    private StatusEnum status;
+    private UserStatus status;
 
     @CreatedDate
     @Column(name = "CREATED_AT", updatable = false)

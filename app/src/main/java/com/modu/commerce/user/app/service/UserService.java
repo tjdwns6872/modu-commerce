@@ -1,9 +1,9 @@
-package com.modu.commerce.user.service;
+package com.modu.commerce.user.app.service;
 
-import com.modu.commerce.user.dto.UserDetailResponse;
-import com.modu.commerce.user.dto.UserLoginRequest;
-import com.modu.commerce.user.dto.UserLoginResponse;
-import com.modu.commerce.user.dto.UserSignupRequest;
+import com.modu.commerce.user.api.dto.request.UserLoginRequest;
+import com.modu.commerce.user.api.dto.request.UserSignupRequest;
+import com.modu.commerce.user.api.dto.response.UserDetailResponse;
+import com.modu.commerce.user.api.dto.response.UserLoginResponse;
 
 public interface UserService {
 

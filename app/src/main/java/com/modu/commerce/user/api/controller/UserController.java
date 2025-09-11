@@ -1,4 +1,4 @@
-package com.modu.commerce.user.controller;
+package com.modu.commerce.user.api.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.modu.commerce.common.api.response.CommonResponseVO;
 import com.modu.commerce.security.CustomUserDetails;
-import com.modu.commerce.user.dto.UserDetailResponse;
-import com.modu.commerce.user.dto.UserLoginRequest;
-import com.modu.commerce.user.dto.UserLoginResponse;
-import com.modu.commerce.user.dto.UserSignupRequest;
-import com.modu.commerce.user.service.UserService;
+import com.modu.commerce.user.api.dto.request.UserLoginRequest;
+import com.modu.commerce.user.api.dto.request.UserSignupRequest;
+import com.modu.commerce.user.api.dto.response.UserDetailResponse;
+import com.modu.commerce.user.api.dto.response.UserLoginResponse;
+import com.modu.commerce.user.app.service.UserService;
 
 import jakarta.validation.Valid;
 
