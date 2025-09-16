@@ -1,5 +1,8 @@
 package com.modu.commerce.products.api.admin.controller;
 
+import java.net.URI;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,7 +40,16 @@ public class ProductAdminController {
             .visibility(request.getVisibility())
             .build();
 
-        productCommandService.createProduct(spec);
-        return null;
+        Long productId = productCommandService.createProduct(spec);
+
+        CommonResponseVO<Long> response = CommonResponseVO.<Long>builder()
+            .code(HttpStatus.CREATED.value())
+            .message("상품을 생성했습니다.")
+            .data(productId)
+            .build();
+
+        URI location = URI.create("/api/admin/products/" + productId);
+
+        return ResponseEntity.created(location).body(response);
     }
 }

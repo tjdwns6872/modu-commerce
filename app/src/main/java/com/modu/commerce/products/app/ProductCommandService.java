@@ -4,5 +4,5 @@ import com.modu.commerce.products.domain.spec.AdminProductSpec;
 
 public interface ProductCommandService {
     
-    public void createProduct(AdminProductSpec spec);
+    public Long createProduct(AdminProductSpec spec);
 }
