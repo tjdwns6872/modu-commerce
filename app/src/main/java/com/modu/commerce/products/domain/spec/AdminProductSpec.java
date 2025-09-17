@@ -1,5 +1,6 @@
 package com.modu.commerce.products.domain.spec;
 
+import com.modu.commerce.products.domain.type.ProductStatus;
 import com.modu.commerce.products.domain.type.ProductVisibility;
 
 import lombok.Builder;
@@ -16,4 +17,8 @@ public class AdminProductSpec {
     private String summary;
     private String descriptionMd;
     private ProductVisibility visibility;
+    private ProductStatus status;
+
+    private String sellStartAt;
+    private String sellEndAt;
 }

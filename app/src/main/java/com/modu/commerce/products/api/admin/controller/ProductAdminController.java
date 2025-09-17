@@ -16,10 +16,12 @@ import com.modu.commerce.products.app.ProductCommandService;
 import com.modu.commerce.products.domain.spec.AdminProductSpec;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("/api/admin")
 @RestController
+@Slf4j
 public class ProductAdminController {
 
     private final ProductCommandService productCommandService;
@@ -30,6 +32,7 @@ public class ProductAdminController {
 
     @PostMapping("/products")
     public ResponseEntity<CommonResponseVO<Long>> createProduct(@RequestBody @Valid ProductCreateRequest request){
+
         AdminProductSpec spec = AdminProductSpec.builder()
             .name(request.getName())
             .slug(request.getSlug())
@@ -38,6 +41,7 @@ public class ProductAdminController {
             .summary(request.getSummary())
             .descriptionMd(request.getDescriptionMd())
             .visibility(request.getVisibility())
+            .status(request.getStatus())
             .build();
 
         Long productId = productCommandService.createProduct(spec);

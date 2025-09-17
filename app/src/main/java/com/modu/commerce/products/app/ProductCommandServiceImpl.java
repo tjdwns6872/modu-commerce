@@ -1,12 +1,14 @@
 package com.modu.commerce.products.app;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import org.springframework.stereotype.Service;
 
 import com.modu.commerce.products.domain.entity.ModuProduct;
 import com.modu.commerce.products.domain.exception.InvalidProductNameException;
 import com.modu.commerce.products.domain.exception.ProductConstraintViolationException;
 import com.modu.commerce.products.domain.spec.AdminProductSpec;
-import com.modu.commerce.products.domain.type.ProductStatus;
 import com.modu.commerce.products.infra.BrandReaderJpaAdapter;
 import com.modu.commerce.products.infra.CategoryReaderJpaAdapter;
 import com.modu.commerce.products.infra.ProductRepository;
@@ -34,22 +36,34 @@ public class ProductCommandServiceImpl implements ProductCommandService{
         log.info("\n{}", spec.toString());
         
         final String name = spec.getName() == null ? "" : spec.getName().strip();
-
         if(name.isEmpty()){
             throw new InvalidProductNameException();
         }
+        
+        // final String slug = spec.getSlug() == null ? "" : spec.getSlug().strip().toLowerCase(Locale.ROOT);
+        // boolean slugExists = productRepository.existsBySlugAndIsDeletedFalse(slug);
+        // if(slugExists){
+        //     throw new DuplicateProductSlugException();
+        // }
 
         if(spec.getBrandId() != null){
             brandReaderJpaAdapter.getOneBrand(spec.getBrandId());
         }
-        categoryReaderJpaAdapter.getOneCategory(spec.getCategoryIds()[0]);
+
+        // 중복 제거
+        Set<Long> set = new HashSet<>();
+        for(long i : spec.getCategoryIds()){
+            set.add(i);
+        }
+
+        Set<Long> activeCategoryIds = categoryReaderJpaAdapter.existsCatrgoryList(set);
 
         ModuProduct toSave = ModuProduct.builder()
                                 .brandId(spec.getBrandId())
                                 .name(name)
                                 .summary(spec.getSummary())
                                 .descriptionMd(spec.getDescriptionMd())
-                                .status(ProductStatus.DRAFT)
+                                .status(spec.getStatus())
                                 .visibility(spec.getVisibility())
                                 .sellStartAt(null)
                                 .sellEndAt(null)

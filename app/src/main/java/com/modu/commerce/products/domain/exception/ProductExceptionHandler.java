@@ -71,6 +71,14 @@ public class ProductExceptionHandler {
             .build();
         return ResponseEntity.status(body.getCode()).body(body);
     }
+    @ExceptionHandler(DuplicateProductSlugException.class)
+    public ResponseEntity<CommonResponseVO<Void>> duplicateProductSlugException(DuplicateProductSlugException ex){
+        CommonResponseVO<Void> body = CommonResponseVO.<Void>builder()
+            .code(HttpStatus.CONFLICT.value())
+            .message(ex.getMessage())
+            .build();
+        return ResponseEntity.status(body.getCode()).body(body);
+    }
 
     @ExceptionHandler(ProductSlugTooLongException.class)
     public ResponseEntity<CommonResponseVO<Void>> productSlugTooLongException(ProductSlugTooLongException ex) {

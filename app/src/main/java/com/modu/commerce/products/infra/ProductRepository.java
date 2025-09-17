@@ -6,4 +6,5 @@ import com.modu.commerce.products.domain.entity.ModuProduct;
 
 public interface ProductRepository extends JpaRepository<ModuProduct, Long>{
     
+    public boolean existsBySlugAndIsDeletedFalse(String slug);
 }

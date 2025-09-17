@@ -1,5 +1,6 @@
 package com.modu.commerce.products.api.admin.dto.request;
 
+import com.modu.commerce.products.domain.type.ProductStatus;
 import com.modu.commerce.products.domain.type.ProductVisibility;
 
 import jakarta.validation.constraints.NotBlank;
@@ -27,7 +28,14 @@ public class ProductCreateRequest {
     @Size(max = 500, message = "summary은 500자 이하여야 합니다.")
     private String summary;
 
+    private String sellStartAt;
+    private String sellEndAt;
+
+    private int price;
+    private int salePrice;
+
     private String descriptionMd;
 
     private ProductVisibility visibility;
+    private ProductStatus status;
 }
